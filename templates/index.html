@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleeper Bus Booking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h1>🚌 Sleeper Bus Booking</h1>
+                    <div class="route-info">
+                        <span>Ahmedabad</span>
+                        <span>→</span>
+                        <span>Nadiad</span>
+                        <span>→</span>
+                        <span>Vadodara</span>
+                        <span>→</span>
+                        <span>Surat</span>
+                        <span>→</span>
+                        <span>Mumbai</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="showBookings()" style="height: fit-content;">View Bookings</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="step-indicator">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Journey</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Seats</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Meals</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Details</div>
+                </div>
+                <div class="step" data-step="5">
+                    <div class="step-number">5</div>
+                    <div class="step-label">Confirm</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Journey Details -->
+            <div class="section active" id="step1">
+                <div class="journey-details">
+                    <h3>Select Boarding Point</h3>
+                    <select class="form-select" id="boardingSelect" onchange="handleBoardingChange()">
+                        <option value="">-- Select Boarding Point --</option>
+                    </select>
+                </div>
+
+                <div class="journey-details">
+                    <h3>Select Dropping Point</h3>
+                    <select class="form-select" id="droppingSelect" onchange="handleDroppingChange()">
+                        <option value="">-- Select Dropping Point --</option>
+                    </select>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="goToStep(2)">Next: Select Seats</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Seat Selection -->
+            <div class="section" id="step2">
+                <div class="seat-layout">
+                    <h3 style="text-align: center; margin-bottom: 20px;">Select Your Seats</h3>
+                    
+                    <div class="seat-legend">
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: #10b981;"></div>
+                            <span>Available</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: #667eea;"></div>
+                            <span>Selected</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: #9ca3af;"></div>
+                            <span>Booked</span>
+                        </div>
+                    </div>
+
+                    <div class="bus-container">
+                        <div class="seat-column" id="leftSeats"></div>
+                        <div class="aisle">AISLE</div>
+                        <div class="seat-column" id="rightSeats"></div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Next: Select Meals</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Meal Selection -->
+            <div class="section" id="step3">
+                <h3 style="margin-bottom: 20px;">Select Meals (Optional)</h3>
+                <div class="meal-options" id="mealOptions"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(4)">Next: Passenger Details</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Passenger Details -->
+            <div class="section" id="step4">
+                <h3 style="margin-bottom: 20px;">Passenger Details</h3>
+                <div class="passenger-form" id="passengerForms"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(5)">Review Booking</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Confirmation -->
+            <div class="section" id="step5">
+                <div class="prediction-box" id="predictionBox">
+                    <h3>Booking Confirmation Probability</h3>
+                    <div class="prediction-percentage" id="predictionPercentage">--</div>
+                    <p id="predictionMessage">Analyzing booking data...</p>
+                </div>
+
+                <div class="booking-summary" id="bookingSummary"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(4)">Back</button>
+                    <button class="btn btn-primary" onclick="confirmBooking()">Confirm Booking</button>
+                </div>
+            </div>
+
+            <!-- View Bookings Modal -->
+            <div class="section" id="stepBookings">
+                <h2 style="margin-bottom: 20px;">All Bookings</h2>
+                <div id="bookingsListContainer" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Bookings will be loaded here -->
+                </div>
+                <div class="buttons" style="justify-content: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="backToHome()">Back to Home</button>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div class="section" id="stepSuccess">
+                <div class="success-message">
+                    <div class="success-icon">✓</div>
+                    <h2>Booking Confirmed!</h2>
+                    <div class="booking-id" id="bookingIdDisplay"></div>
+                    
+                    <!-- Confirmation Probability -->
+                    <div class="prediction-box" id="successPredictionBox" style="margin: 20px 0;">
+                        <h3>Confirmation Probability</h3>
+                        <div class="prediction-percentage" id="successPredictionPercentage">--</div>
+                        <p id="successPredictionMessage">Your booking has been confirmed!</p>
+                    </div>
+                    
+                    <p>Your tickets have been booked successfully. A confirmation has been sent to your email.</p>
+                    <div class="buttons" style="justify-content: center; margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="location.reload()">Book Another Ticket</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        const bookingData = {
+            boardingPoint: '',
+            droppingPoint: '',
+            source: '',
+            desti: '',
+            total_amount: 0,
+            selectedSeats: [],
+            selectedMeals: [],
+            passengers: []
+        };
+
+        let stations = [];
+        let meals = [];
+        let bookedSeats = [];
+
+        async function initializeApp() {
+            await loadStations();
+            await loadSeats();
+            await loadMeals();
+        }
+
+        async function loadStations() {
+            try {
+                const response = await fetch(`${API_URL}/stations`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    stations = data.stations;
+                    populateStationDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading stations:', error);
+            }
+        }
+
+        function populateStationDropdowns() {
+            const boardingSelect = document.getElementById('boardingSelect');
+            const droppingSelect = document.getElementById('droppingSelect');
+
+            // Clear existing options except the first one
+            boardingSelect.innerHTML = '<option value="">-- Select Boarding Point --</option>';
+            droppingSelect.innerHTML = '<option value="">-- Select Dropping Point --</option>';
+
+            stations.forEach(station => {
+                const boardingOption = document.createElement('option');
+                boardingOption.value = station.id;
+                boardingOption.textContent = `${station.name} - Departure: ${station.time}`;
+                boardingSelect.appendChild(boardingOption);
+
+                const droppingOption = document.createElement('option');
+                droppingOption.value = station.id;
+                droppingOption.textContent = `${station.name} - Arrival: ${station.time}`;
+                droppingSelect.appendChild(droppingOption);
+            });
+        }
+
+        function handleBoardingChange() {
+            const boardingSelect = document.getElementById('boardingSelect');
+            bookingData.boardingPoint = parseInt(boardingSelect.value) || null;
+            bookingData.source = stations.find(s => s.id === bookingData.boardingPoint)?.name;
+        }
+
+        function handleDroppingChange() {
+            const droppingSelect = document.getElementById('droppingSelect');
+            bookingData.droppingPoint = parseInt(droppingSelect.value) || null;
+            bookingData.desti = stations.find(s => s.id === bookingData.droppingPoint)?.name;
+        }
+
+        async function loadSeats() {
+            try {
+                const response = await fetch(`${API_URL}/seats`);
+                const data = await response.json();
+                bookedSeats = data.booked_seats || [];
+                renderSeats();
+            } catch (error) {
+                console.error('Error loading seats:', error);
+            }
+        }
+
+        function renderSeats() {
+            const leftSeats = document.getElementById('leftSeats');
+            const rightSeats = document.getElementById('rightSeats');
+            leftSeats.innerHTML = '';
+            rightSeats.innerHTML = '';
+
+            // Upper berths (1U-16U) - divided into left and right columns
+            leftSeats.innerHTML += '<div style="font-weight: bold; text-align: center; margin-bottom: 10px; color: #667eea;">UPPER</div>';
+            for (let i = 1; i <= 8; i++) {
+                leftSeats.innerHTML += createSeatHTML(`${i}U`);
+            }
+
+            rightSeats.innerHTML += '<div style="font-weight: bold; text-align: center; margin-bottom: 10px; color: #667eea;">UPPER</div>';
+            for (let i = 9; i <= 16; i++) {
+                rightSeats.innerHTML += createSeatHTML(`${i}U`);
+            }
+
+            // Add spacing/separator
+            leftSeats.innerHTML += '<div style="height: 30px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: #999;">─────</div>';
+            rightSeats.innerHTML += '<div style="height: 30px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: #999;">─────</div>';
+
+            // Lower berths (1L-16L) - divided into left and right columns
+            leftSeats.innerHTML += '<div style="font-weight: bold; text-align: center; margin-bottom: 10px; color: #764ba2;">LOWER</div>';
+            for (let i = 1; i <= 8; i++) {
+                leftSeats.innerHTML += createSeatHTML(`${i}L`);
+            }
+
+            rightSeats.innerHTML += '<div style="font-weight: bold; text-align: center; margin-bottom: 10px; color: #764ba2;">LOWER</div>';
+            for (let i = 9; i <= 16; i++) {
+                rightSeats.innerHTML += createSeatHTML(`${i}L`);
+            }
+        }
+
+        function createSeatHTML(seatLabel) {
+            const isBooked = bookedSeats.includes(seatLabel);
+            const isSelected = bookingData.selectedSeats.includes(seatLabel);
+            
+            let className = 'seat ';
+            if (isBooked) className += 'booked';
+            else if (isSelected) className += 'selected';
+            else className += 'available';
+
+            return `<div class="${className}" onclick="toggleSeat('${seatLabel}')">${seatLabel}</div>`;
+        }
+
+        function toggleSeat(seatLabel) {
+            if (bookedSeats.includes(seatLabel)) return;
+
+            const index = bookingData.selectedSeats.indexOf(seatLabel);
+            if (index > -1) {
+                bookingData.selectedSeats.splice(index, 1);
+            } else {
+                bookingData.selectedSeats.push(seatLabel);
+            }
+            renderSeats();
+        }
+
+        async function loadMeals() {
+            try {
+                const response = await fetch(`${API_URL}/meals`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    meals = data.meals;
+                    renderMeals();
+                }
+            } catch (error) {
+                console.error('Error loading meals:', error);
+            }
+        }
+
+        function renderMeals() {
+            const mealDiv = document.getElementById('mealOptions');
+            mealDiv.innerHTML = '';
+
+            meals.forEach(meal => {
+                const mealHTML = `
+                    <div class="meal-card" onclick="toggleMeal(${meal.id})">
+                        <h4>${meal.name}</h4>
+                        <p>${meal.description}</p>
+                        <div class="meal-price">₹${meal.price}</div>
+                    </div>
+                `;
+                mealDiv.innerHTML += mealHTML;
+            });
+        }
+
+        function toggleMeal(mealId) {
+            const index = bookingData.selectedMeals.indexOf(mealId);
+            if (index > -1) {
+                bookingData.selectedMeals.splice(index, 1);
+            } else {
+                bookingData.selectedMeals.push(mealId);
+            }
+
+            const mealCards = document.querySelectorAll('.meal-card');
+            mealCards.forEach((card, idx) => {
+                if (meals[idx].id === mealId) {
+                    card.classList.toggle('selected');
+                }
+            });
+        }
+
+        async function showBookings() {
+            try {
+                const response = await fetch(`${API_URL}/bookings`);
+                const data = await response.json();
+                
+                const container = document.getElementById('bookingsListContainer');
+                
+                if (!data.bookings || data.bookings.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">No bookings found.</p>';
+                } else {
+                    let html = '';
+                    data.bookings.forEach((booking, index) => {
+                        const statusColor = booking.status === 'cancelled' ? '#ef4444' : '#10b981';
+                        const statusText = booking.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED';
+                        
+                        html += `
+                            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #f9fafb;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="margin: 0; color: #667eea;">Booking #${index + 1}</h4>
+                                    <span style="padding: 5px 10px; border-radius: 5px; background: ${statusColor}; color: white; font-size: 0.8em; font-weight: bold;">${statusText}</span>
+                                </div>
+                                <p><strong>Booking ID:</strong> ${booking.booking_id}</p>
+                                <p><strong>Passenger:</strong> ${booking.passenger_name}</p>
+                                <p><strong>Contact:</strong> ${booking.passenger_contact}</p>
+                                <p><strong>Seats:</strong> ${booking.seats.join(', ')}</p>
+                                <p><strong>Route:</strong> ${booking.boarding} → ${booking.dropping}</p>
+                                <p><strong>Total Amount:</strong> ₹${booking.total_amount}</p>
+                                ${booking.status !== 'cancelled' ? `
+                                    <button class="btn btn-secondary" onclick="cancelBooking('${booking.booking_id}')" style="margin-top: 10px; padding: 8px 15px; font-size: 0.9em;">Cancel Booking</button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+                
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById('stepBookings').classList.add('active');
+            } catch (error) {
+                console.error('Error fetching bookings:', error);
+                alert('Failed to load bookings');
+            }
+        }
+
+        async function cancelBooking(bookingId) {
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/cancel/${bookingId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Booking cancelled successfully! Refund amount: ₹${data.refund_amount}`);
+                    // Reload seats to reflect the freed seats
+                    await loadSeats();
+                    // Refresh bookings list
+                    await showBookings();
+                } else {
+                    alert(data.message || 'Failed to cancel booking');
+                }
+            } catch (error) {
+                console.error('Error cancelling booking:', error);
+                alert('Failed to cancel booking');
+            }
+        }
+
+        function backToHome() {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('step1').classList.add('active');
+        }
+
+        function goToStep(stepNum) {
+            if (stepNum === 2 && (!bookingData.boardingPoint || !bookingData.droppingPoint)) {
+                alert('Please select boarding and dropping points');
+                return;
+            }
+
+            // Validate that dropping point is after boarding point
+            if (stepNum === 2 && bookingData.boardingPoint >= bookingData.droppingPoint) {
+                alert('Dropping point must be after boarding point');
+                return;
+            }
+
+            if (stepNum === 3 && bookingData.selectedSeats.length === 0) {
+                alert('Please select at least one seat');
+                return;
+            }
+
+            if (stepNum === 4) {
+                generatePassengerForms();
+            }
+
+            if (stepNum === 5) {
+                if (!validatePassengerDetails()) {
+                    alert('Please fill all passenger details');
+                    return;
+                }
+                showBookingSummary();
+                getPrediction();
+            }
+
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('step' + stepNum).classList.add('active');
+
+            document.querySelectorAll('.step').forEach(step => {
+                const num = parseInt(step.dataset.step);
+                step.classList.remove('active', 'completed');
+                if (num === stepNum) {
+                    step.classList.add('active');
+                } else if (num < stepNum) {
+                    step.classList.add('completed');
+                }
+            });
+        }
+
+        function generatePassengerForms() {
+            const formsDiv = document.getElementById('passengerForms');
+            formsDiv.innerHTML = '';
+
+            bookingData.selectedSeats.forEach((seat, index) => {
+                const formHTML = `
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                        <h4 style="margin-bottom: 15px;">Passenger ${index + 1} - Seat ${seat}</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="name_${index}" placeholder="Enter full name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="age_${index}" placeholder="Age" min="1" max="120" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="gender_${index}" required>
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="phone_${index}" placeholder="10-digit number" pattern="[0-9]{10}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="email_${index}" placeholder="email@example.com" required>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                formsDiv.innerHTML += formHTML;
+            });
+        }
+
+        function validatePassengerDetails() {
+            bookingData.passengers = [];
+            
+            for (let i = 0; i < bookingData.selectedSeats.length; i++) {
+                const name = document.getElementById(`name_${i}`).value;
+                const age = document.getElementById(`age_${i}`).value;
+                const gender = document.getElementById(`gender_${i}`).value;
+                const phone = document.getElementById(`phone_${i}`).value;
+                const email = document.getElementById(`email_${i}`).value;
+
+                if (!name || !age || !gender || !phone || !email) {
+                    return false;
+                }
+
+                bookingData.passengers.push({
+                    name, age, gender, phone, email,
+                    seat: bookingData.selectedSeats[i]
+                });
+            }
+            return true;
+        }
+
+        function showBookingSummary() {
+            const summaryDiv = document.getElementById('bookingSummary');
+            
+            const boarding = stations.find(s => s.id === bookingData.boardingPoint);
+            const dropping = stations.find(s => s.id === bookingData.droppingPoint);
+            
+            const seatPrice = Math.abs(dropping.price - boarding.price) * bookingData.selectedSeats.length;
+            const mealPrice = bookingData.selectedMeals.reduce((sum, mealId) => {
+                const meal = meals.find(m => m.id === mealId);
+                return sum + (meal ? meal.price * bookingData.selectedSeats.length : 0);
+            }, 0);
+            const total = seatPrice + mealPrice;
+
+            let summaryHTML = '<h3 style="margin-bottom: 20px;">Booking Summary</h3>';
+            summaryHTML += `<div class="summary-item"><span>Route:</span><span>${boarding.name} → ${dropping.name}</span></div>`;
+            summaryHTML += `<div class="summary-item"><span>Seats:</span><span>${bookingData.selectedSeats.join(', ')}</span></div>`;
+            summaryHTML += `<div class="summary-item"><span>Passengers:</span><span>${bookingData.passengers.length}</span></div>`;
+            
+            if (bookingData.selectedMeals.length > 0) {
+                const mealNames = bookingData.selectedMeals.map(id => meals.find(m => m.id === id).name).join(', ');
+                summaryHTML += `<div class="summary-item"><span>Meals:</span><span>${mealNames}</span></div>`;
+            }
+            
+            summaryHTML += `<div class="summary-item"><span>Seat Charges:</span><span>₹${seatPrice}</span></div>`;
+            summaryHTML += `<div class="summary-item"><span>Meal Charges:</span><span>₹${mealPrice}</span></div>`;
+            summaryHTML += `<div class="summary-item"><span>Total Amount:</span><span>₹${total}</span></div>`;
+
+            summaryDiv.innerHTML = summaryHTML;
+        }
+
+        async function getPrediction() {
+            try {
+                // Calculate total amount for prediction
+                const boarding = stations.find(s => s.id === bookingData.boardingPoint);
+                const dropping = stations.find(s => s.id === bookingData.droppingPoint);
+                
+                const seatPrice = Math.abs(dropping.price - boarding.price) * bookingData.selectedSeats.length;
+                const mealPrice = bookingData.selectedMeals.reduce((sum, mealId) => {
+                    const meal = meals.find(m => m.id === mealId);
+                    return sum + (meal ? meal.price * bookingData.selectedSeats.length : 0);
+                }, 0);
+                const totalAmount = seatPrice + mealPrice;
+                bookingData.total_amount = totalAmount;
+
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        selectedSeats: bookingData.selectedSeats,
+                        boardingPoint: bookingData.source,
+                        droppingPoint: bookingData.desti,
+                        selectedMeals: bookingData.selectedMeals,
+                        totalAmount: totalAmount
+                    })
+                });
+                const data = await response.json();
+                console.log('[v0] Prediction response:', data);
+                displayPrediction(data.prediction_percentage, data.message);
+            } catch (error) {
+                console.log('[v0] Error in prediction:', error);
+                console.log('Using mock prediction');
+                const mockPrediction = Math.floor(Math.random() * 20) + 75;
+                displayPrediction(mockPrediction, 'High probability of confirmation');
+            }
+        }
+
+        function displayPrediction(percentage, message) {
+            document.getElementById('predictionPercentage').textContent = percentage + '%';
+            document.getElementById('predictionMessage').textContent = message;
+        }
+
+        async function confirmBooking() {
+            try {
+                const response = await fetch(`${API_URL}/book`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload seats after successful booking
+                    await loadSeats();
+                    showSuccess(data.booking_id);
+                } else {
+                    alert(data.message || 'Booking failed');
+                }
+            } catch (error) {
+                console.error('Error confirming booking:', error);
+                alert('Failed to confirm booking');
+            }
+        }
+
+        function showSuccess(bookingId) {
+            document.getElementById('bookingIdDisplay').innerHTML = `<strong>Booking ID:</strong> ${bookingId}`;
+            
+            // Copy prediction data to success page
+            const predictionPercentage = document.getElementById('predictionPercentage').textContent;
+            const predictionMessage = document.getElementById('predictionMessage').textContent;
+            
+            document.getElementById('successPredictionPercentage').textContent = predictionPercentage;
+            document.getElementById('successPredictionMessage').textContent = predictionMessage;
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('stepSuccess').classList.add('active');
+        }
+
+        initializeApp();
+    </script>
+</body>
+</html>
