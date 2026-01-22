@@ -51,6 +51,21 @@ body {
     font-size: 1.2em;
 }
 
+.minner
+{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.outer
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
 .main-content {
     padding: 30px;
 }
@@ -527,7 +542,16 @@ body {
     font-size: 1.2em;
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 870px) {
+    .outer
+    {
+        flex-direction: column;
+        align-items: flex-start;
+        row-gap: 20px;
+    }
+}
+
+@media screen and (max-width: 768px) {
     .bus-container {
         gap: 20px;
     }
@@ -547,5 +571,39 @@ body {
 
     .btn {
         width: 100%;
+    }
+
+    .header h1
+    {
+        font-size: 2em;
+    }
+
+    .route-info
+    {
+        font-size: 1.2em;
+        flex-wrap: wrap;
+    }
+}
+
+
+@media screen and (max-width: 425px) {
+    body
+    {
+        padding: 20px 30px;
+    }
+    .header h1
+    {
+        font-size: 1.5em;
+    }
+
+    .route-info
+    {
+        font-size: 0.9em;
+        flex-wrap: wrap;
+    }
+
+    .success-message
+    {
+        padding:0px;
     }
 }

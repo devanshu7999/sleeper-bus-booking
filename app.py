@@ -1,10 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import json
-import random
 from datetime import datetime
 import pandas as pd
-import numpy as np
 import pickle
 import os
 
@@ -12,6 +9,9 @@ app = Flask(__name__)
 CORS(app)
 
 # In-memory storage
+with open("model/Sleeper_Booking.pkl", "rb") as f:
+    model = pickle.load(f)
+
 bookings = []
 booked_seats = ['5U', '12U', '18L', '25L', '29L']  # Pre-booked seats
 
@@ -255,8 +255,6 @@ def predict_confirmation():
             'total_amount': total_amount
         })
     
-    # Create DataFrame from first seat data for prediction
-    # Use encoded version for model input
     model_input = {
         'seat_count': seat_data[0]['seat_count'],
         'seat_type': seat_data[0]['seat_type'],
@@ -267,19 +265,12 @@ def predict_confirmation():
         'has_meal': seat_data[0]['has_meal'],
         'total_amount': seat_data[0]['total_amount']
     }
-    print(model_input)
     df = pd.DataFrame([model_input])
         
     # Load the ML model
-    model_path = "Sleeper_Booking.pkl"
     try:
-        if os.path.exists(model_path):
-            with open(model_path, "rb") as f:
-                model = pickle.load(f)
-            
-            # Make prediction
+        if model:
             prediction_proba = model.predict(df)[0]
-            print(type(prediction_proba))
             # Get probability of confirmation (assuming class 1 is confirmed)            
             confirmation_probability = prediction_proba
             print(f"[v0] Model prediction: {confirmation_probability}%")
@@ -349,6 +340,10 @@ def check_availability():
         "route": f"{boarding_station['name']} to {dropping_station['name']}"
     })
 
-if __name__ == '__main__':
-    print("=" * 50)
-    app.run(debug=True, port=5000)
+
+application = app
+
+# Local debug server (not used by Gunicorn)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=8080)
