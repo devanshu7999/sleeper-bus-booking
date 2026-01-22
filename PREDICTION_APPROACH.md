@@ -64,7 +64,7 @@ Since real-world booking data may not be available initially, a **synthetic (moc
 | 1 | lower | Vadodara | Surat | 2 | 10 | 0 | 400 | 0 |
 | 3 | upper | Ahmedabad | Surat | 5 | 22 | 1 | 1800 | 1 |
 
-**Target Variable:**  
+**Confirmation Probability:**  
 - `confirmation` (1 = Confirmed, 0 = Not Confirmed)
 
 ---
